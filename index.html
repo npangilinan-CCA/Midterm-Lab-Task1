@@ -1,1 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midterm Lab Task 1 - Data Cleaning and Preparation</title>
+    <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Cursor */
+        * {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M7,2 L17,12 L7,22 L7,2" fill="silver" stroke="white" stroke-width="1"/><text x="14" y="14" fill="white" font-size="8">♱</text></svg>') 7 12, auto;
+        }
 
+        /* Hover Cursor */
+        a:hover, button:hover, .logo:hover, .frame-corner:hover, ul li:hover {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M7,2 L17,12 L7,22 L7,2" fill="white" stroke="silver" stroke-width="1"/><text x="14" y="14" fill="silver" font-size="8">♱</text></svg>') 7 12, pointer;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: linear-gradient(90deg, #000, #111);
+            border: 1px solid rgba(192, 192, 192, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #333, #666);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #444, #777);
+        }
+
+        :root {
+            --chrome-black: #000000;
+            --chrome-silver: #C0C0C0;
+            --chrome-white: #FFFFFF;
+            --cross-pink: #FFB6C1;
+            --cross-blue: #4169E1;
+            --cross-yellow: #FFD700;
+            --cross-red: #FF0000;
+            --cross-green: #00FF00;
+        }
+
+        body {
+            margin: 0;
+            padding: 2rem;
+            font-family: 'Playfair Display', serif;
+            color: white;
+            background: black;
+            line-height: 1.6;
+            font-size: 18px;
+            overflow-x: hidden;
+        }
+
+        /* Enhanced Title Styles */
+        .title-container {
+            position: relative;
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+        }
+
+        .main-title {
+            position: relative;
+            display: inline-block;
+            font-family: 'UnifrakturCook', cursive;
+            font-size: 3rem !important;
+            background: linear-gradient(45deg, #c0c0c0, #ffffff, #808080) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            transition: all 0.3s ease;
+            padding: 1rem !important;
+            margin: 0 !important;
+            cursor: pointer;
+        }
+
+        .main-title::before,
+        .main-title::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent,
+                #FFB6C1, #4169E1, #FFD700, #FF0000, #00FF00,
+                transparent
+            );
+            transition: width 0.5s ease;
+        }
+
+        .main-title::before {
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+        }
+
+        .main-title::after {
+            right: 50%;
+            bottom: 0;
+            transform: translateX(50%);
+        }
+
+        .title-container:hover .main-title::before,
+        .title-container:hover .main-title::after {
+            width: 100%;
+        }
+
+        .title-container:hover .main-title {
+            text-shadow: 
+                0 0 10px rgba(255, 255, 255, 0.5),
+                0 0 20px rgba(255, 255, 255, 0.3),
+                0 0 30px rgba(255, 255, 255, 0.1);
+            letter-spacing: 2px;
+            transform: scale(1.05);
+        }
+
+        .title-container::before,
+        .title-container::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 2px;
+            height: 0;
+            background: linear-gradient(to bottom,
+                transparent,
+                var(--chrome-silver),
+                transparent
+            );
+            transition: height 0.3s ease;
+        }
+
+        .title-container::before {
+            left: 0;
+        }
+
+        .title-container::after {
+            right: 0;
+        }
+
+        .title-container:hover::before,
+        .title-container:hover::after {
+            height: 80%;
+            transform: translateY(-50%);
+        }
+
+        /* Floating Colored Crosses */
+        .colored-cross {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.5;
+            animation: float 20s linear infinite;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+                /* Loading Screen Styles */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .loading-logo {
+            font-family: 'UnifrakturCook', cursive;
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(145deg, #e0e0e0, #aaa, #f5f5f5, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: loadingColorCycle 2s infinite;
+        }
+
+        .loading-cross {
+            font-size: 3rem;
+            margin: 2rem 0;
+            animation: loadingSpin 2s infinite linear;
+            color: var(--chrome-silver);
+        }
+
+        .loading-bar-container {
+            width: 200px;
+            height: 2px;
+            background: rgba(192, 192, 192, 0.1);
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(
+                to right,
+                var(--chrome-silver),
+                var(--chrome-white),
+                var(--chrome-silver)
+            );
+            animation: loadingProgress 2s ease-out forwards;
+        }
+
+        .loading-text {
+            font-family: 'Playfair Display', serif;
+            color: var(--chrome-silver);
+            font-size: 1rem;
+            letter-spacing: 3px;
+            margin-top: 1rem;
+            opacity: 0.8;
+        }
+
+        /* Enhanced Bullet Points Styles */
+        .markdown-content ul li,
+        .markdown-content ol li {
+            position: relative;
+            padding: 0.5rem 1rem;
+            margin: 0.5rem 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .markdown-content ul li::before,
+        .markdown-content ol li::before {
+            content: '♱';
+            position: absolute;
+            left: -20px;
+            color: var(--chrome-silver);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .markdown-content ul li::after,
+        .markdown-content ol li::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                var(--cross-pink),
+                var(--cross-blue),
+                var(--cross-yellow),
+                var(--cross-red),
+                var(--cross-green)
+            );
+            transition: width 0.3s ease;
+        }
+
+        .markdown-content ul li:hover,
+        .markdown-content ol li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(20px);
+            padding-left: 2rem;
+        }
+
+        .markdown-content ul li:hover::before,
+        .markdown-content ol li:hover::before {
+            left: 5px;
+            opacity: 1;
+        }
+
+        .markdown-content ul li:hover::after,
+        .markdown-content ol li:hover::after {
+            width: 100%;
+        }
+                /* Content Styles */
+        .markdown-content {
+            max-width: 1200px;
+            margin: auto;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border: 2px solid var(--chrome-silver);
+            box-shadow: 0 0 20px rgba(192, 192, 192, 0.3);
+            position: relative;
+            backdrop-filter: blur(5px);
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+
+        .markdown-content.loaded {
+            opacity: 1;
+        }
+
+        .markdown-content h2 {
+            font-family: 'UnifrakturCook', cursive;
+            font-size: 2rem;
+            color: var(--chrome-silver);
+            border-bottom: 2px solid var(--chrome-silver);
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .markdown-content p {
+            color: var(--chrome-silver);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin: 1rem 0;
+        }
+
+        /* Image Styles */
+        .image-frame {
+            position: relative;
+            margin: 2rem auto;
+            max-width: 800px;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid var(--chrome-silver);
+            transition: transform 0.3s ease;
+        }
+
+        .image-frame:hover {
+            transform: scale(1.02);
+        }
+
+        .image-frame img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Frame Corner Styles */
+        .frame-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--chrome-silver);
+        }
+
+        .top-left {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .top-right {
+            top: -2px;
+            right: -2px;
+            border-left: none;
+            border-bottom: none;
+        }
+
+        .bottom-left {
+            bottom: -2px;
+            left: -2px;
+            border-right: none;
+            border-top: none;
+        }
+
+        .bottom-right {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }
+
+        @keyframes loadingSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes loadingColorCycle {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        @keyframes loadingProgress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        @keyframes titleColorCycle {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="loading-logo">Loading</div>
+            <div class="loading-cross">♱</div>
+            <div class="loading-bar-container">
+                <div class="loading-bar"></div>
+            </div>
+            <div class="loading-text">LOADING...</div>
+        </div>
+    </div>
+
+    <div class="markdown-content">
+        <div class="title-container">
+            <h1 class="main-title">Midterm Lab Task 1 - Data Cleaning and Preparation using Excel</h1>
+        </div>
+
+        <p>For this task we are given a Flat data from Excel (See rawfile) and we are Task to perform Data Cleaning and Preparation</p>
+
+        <h2>STEP 1 Data Cleaning process</h2>
+        <ul>
+            <li>Load the raw file</li>
+            <li>Fit Column and row width and height</li>
+            <li>TRIM extra spaces</li>
+            <li>Remove NULL values</li>
+            <li>Remove Duplicates</li>
+        </ul>
+
+        <h2>STEP 2 Normalization</h2>
+        <ul>
+            <li>Performed 1NF</li>
+            <li>Perform Table split using 2NF</li>
+            <li>Perform 3 NF</li>
+            <li>Mapped the Normalized tables as a Physical Data Model</li>
+        </ul>
+
+        <!-- [Previous image sections remain the same] -->
+         <h2>STEP 3 Here's the screenshot of my output before I started data cleaning</h2>
+        <div class="image-frame">
+            <div class="frame-corner top-left"></div>
+            <div class="frame-corner top-right"></div>
+            <div class="frame-corner bottom-left"></div>
+            <div class="frame-corner bottom-right"></div>
+            <img src="https://github.com/user-attachments/assets/a223682c-4426-4cdc-9ddf-a5749a1c3fd1" alt="Before Data Cleaning">
+        </div>
+
+        <h2>STEP 4 Here's the screenshot of my output after I started data cleaning</h2>
+        <div class="image-frame">
+            <div class="frame-corner top-left"></div>
+            <div class="frame-corner top-right"></div>
+            <div class="frame-corner bottom-left"></div>
+            <div class="frame-corner bottom-right"></div>
+            <img src="https://github.com/user-attachments/assets/226f6f60-5b80-4cec-8790-8df5b14639a1" alt="After Data Cleaning">
+        </div>
+
+        <h2>Here's the Physical Data Model</h2>
+        <div class="image-frame">
+            <div class="frame-corner top-left"></div>
+            <div class="frame-corner top-right"></div>
+            <div class="frame-corner bottom-left"></div>
+            <div class="frame-corner bottom-right"></div>
+            <img src="https://github.com/user-attachments/assets/41b9a440-a8c0-4cd9-833a-b93dc08fb1ee" alt="Physical Data Model">
+        </div>
+    </div>
+    
+        <script>
+        // Loading screen handler
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const container = document.querySelector('.markdown-content');
+            
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                container.classList.add('loaded');
+                
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }, 2000);
+        });
+
+        // Title interaction effect
+        document.querySelector('.main-title').addEventListener('mousemove', (e) => {
+            const title = e.target;
+            const rect = title.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const angleX = (y - centerY) / 10;
+            const angleY = (centerX - x) / 10;
+            
+            title.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) scale(1.05)`;
+        });
+
+        document.querySelector('.main-title').addEventListener('mouseleave', (e) => {
+            e.target.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+        });
+
+        // Create floating colored crosses
+        function createColoredCross() {
+            const colors = ['#FFB6C1', '#4169E1', '#FFD700', '#FF0000', '#00FF00'];
+            const cross = document.createElement('div');
+            cross.className = 'colored-cross';
+            cross.innerHTML = '♱';
+            cross.style.left = Math.random() * 100 + 'vw';
+            cross.style.color = colors[Math.floor(Math.random() * colors.length)];
+            cross.style.animationDuration = (15 + Math.random() * 10) + 's';
+            document.body.appendChild(cross);
+
+            setTimeout(() => {
+                cross.remove();
+            }, 20000);
+        }
+
+        // Create initial crosses
+        for (let i = 0; i < 20; i++) {
+            createColoredCross();
+        }
+
+        // Add new crosses periodically
+        setInterval(createColoredCross, 2000);
+    </script>
+</body>
+</html>
